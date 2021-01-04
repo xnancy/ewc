@@ -47,6 +47,7 @@ from transformers import (
     AutoConfig,
     AutoModelWithLMHead,
     AutoTokenizer,
+    RobertaTokenizer,
     PreTrainedModel,
     PreTrainedTokenizer,
     get_linear_schedule_with_warmup,
@@ -390,7 +391,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
                         model.module if hasattr(model, "module") else model
                     )  # Take care of distributed/parallel training
                     model_to_save.save_pretrained(output_dir)
-                    tokenizer.save_pretrained(output_dir)
+                    tokenizer.save_pretrained(output_dir+"-tokenizer")
 
                     torch.save(args, os.path.join(output_dir, "training_args.bin"))
                     logger.info("Saving model checkpoint to %s", output_dir)
@@ -701,9 +702,9 @@ def main():
         )
 
     if args.tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name, cache_dir=args.cache_dir)
+        tokenizer = RobertaTokenizer.from_pretrained(args.tokenizer_name, cache_dir=args.cache_dir)
     elif args.model_name_or_path:
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, cache_dir=args.cache_dir)
+        tokenizer = RobertaTokenizer.from_pretrained(args.model_name_or_path, cache_dir=args.cache_dir)
     else:
         raise ValueError(
             "You are instantiating a new tokenizer from scratch. This is not supported, but you can do it from another script, save it,"
@@ -760,14 +761,14 @@ def main():
             model.module if hasattr(model, "module") else model
         )  # Take care of distributed/parallel training
         model_to_save.save_pretrained(args.output_dir)
-        tokenizer.save_pretrained(args.output_dir)
+        tokenizer.save_pretrained(args.output_dir+"-tokenizer")
 
         # Good practice: save your training arguments together with the trained model
         torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
 
         # Load a trained model and vocabulary that you have fine-tuned
         model = AutoModelWithLMHead.from_pretrained(args.output_dir)
-        tokenizer = AutoTokenizer.from_pretrained(args.output_dir)
+        tokenizer = AutoTokenizer.from_pretrained('roberta-base')
         model.to(args.device)
 
     # Evaluation
